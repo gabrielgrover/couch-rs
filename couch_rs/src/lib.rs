@@ -212,6 +212,9 @@ mod changes;
 
 pub use client::Client;
 
+// Re-export common types for easier access
+pub use types::revision::{DocumentRevisions, RevisionInfo, RevisionStatus};
+
 #[allow(unused_mut, unused_variables)]
 #[cfg(feature = "integration-tests")]
 #[cfg(test)]
