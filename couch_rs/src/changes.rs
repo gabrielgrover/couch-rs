@@ -36,9 +36,14 @@ pub struct ChangesStream {
 
 enum ChangesStreamState {
     Idle,
-    Requesting(Pin<Box<dyn Future<Output = CouchResult<Response>>>>),
-    Reading(Pin<Box<dyn Stream<Item = io::Result<String>>>>),
+    Requesting(Pin<Box<dyn Future<Output = CouchResult<Response>> + Send>>),
+    Reading(Pin<Box<dyn Stream<Item = io::Result<String>> + Send>>),
 }
+
+unsafe impl Send for ChangesStreamState {}
+
+unsafe impl Send for ChangesStream {}
+unsafe impl Sync for ChangesStream {}
 
 impl ChangesStream {
     /// Create a new changes stream.
@@ -183,12 +188,49 @@ impl Stream for ChangesStream {
     }
 }
 
-#[cfg(feature = "integration-tests")]
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    #[test]
+    fn changes_stream_is_send() {
+        fn assert_send<T: Send>() {}
+        assert_send::<ChangesStream>();
+    }
+
+    #[test]
+    fn changes_stream_is_sync() {
+        fn assert_sync<T: Sync>() {}
+        assert_sync::<ChangesStream>();
+    }
+
+    #[tokio::test]
+    async fn changes_stream_can_be_sent_across_threads() {
+        use crate::client::Client;
+
+        let client = Client::new_local_test().unwrap();
+        let changes = ChangesStream::new(client, "test_db".to_string(), None);
+
+        // This test verifies that ChangesStream can be moved across threads
+        let handle = tokio::spawn(async move {
+            // We can't actually use the stream without a running CouchDB instance,
+            // but we can verify it can be moved into a tokio::spawn
+            drop(changes);
+            42
+        });
+
+        let result = handle.await.unwrap();
+        assert_eq!(result, 42);
+    }
+
+    #[cfg(feature = "integration-tests")]
     use crate::client::Client;
+    #[cfg(feature = "integration-tests")]
     use futures_util::StreamExt;
+    #[cfg(feature = "integration-tests")]
     use serde_json::{json, Value};
+
+    #[cfg(feature = "integration-tests")]
     #[tokio::test]
     async fn should_get_changes() {
         let client = Client::new_local_test().unwrap();
