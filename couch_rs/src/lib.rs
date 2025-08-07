@@ -211,6 +211,7 @@ pub mod types;
 mod changes;
 
 pub use client::Client;
+pub use types::revision::{DocumentRevisions, RevisionInfo, RevisionStatus};
 
 #[allow(unused_mut, unused_variables)]
 #[cfg(feature = "integration-tests")]
