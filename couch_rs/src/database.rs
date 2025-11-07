@@ -224,7 +224,7 @@ impl Database {
     /// Gets revision information for a document, including all revision IDs and their status
     ///
     /// Usage:
-    /// ```
+    /// ```no_run
     /// use couch_rs::error::CouchResult;
     ///
     /// const TEST_DB: &str = "test_db";
@@ -265,7 +265,7 @@ impl Database {
     /// Gets a document at a specific revision
     ///
     /// Usage:
-    /// ```
+    /// ```no_run
     /// use couch_rs::error::CouchResult;
     /// use serde_json::Value;
     ///
